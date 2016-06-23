@@ -25,6 +25,8 @@ class BootstrapFieldRenderer(renderers.FieldRenderer):
         html = self.field.as_widget(attrs=self.widget.attrs)
         return html
 
+    non_form_control_widgets = (CheckboxInput, RadioSelect, CheckboxSelectMultiple, FileInput)
+
     def add_class_attrs(self, widget=None):
         if not widget:
             widget = self.widget
@@ -38,15 +40,13 @@ class BootstrapFieldRenderer(renderers.FieldRenderer):
         classes = widget.attrs.get('class', '')
         if isinstance(widget, ReadOnlyPasswordHashWidget):
             classes = add_css_class(classes, 'form-control-static', prepend=True)
-        elif isinstance(widget, (AdminDateWidget,
-                                 AdminTimeWidget,
-                                 RelatedFieldWidgetWrapper)):
+        elif isinstance(widget, (AdminDateWidget, AdminTimeWidget)):
             # for some admin widgets we don't want the input to take full horizontal space
             classes = add_css_class(classes, 'form-control form-control-inline', prepend=True)
-        elif not isinstance(widget, (CheckboxInput,
-                                     RadioSelect,
-                                     CheckboxSelectMultiple,
-                                     FileInput)):
+        elif isinstance(widget, RelatedFieldWidgetWrapper):
+            if not isinstance(widget.widget, self.non_form_control_widgets):
+                classes = add_css_class(classes, 'form-control form-control-inline', prepend=True)
+        elif not isinstance(widget, self.non_form_control_widgets):
             classes = add_css_class(classes, 'form-control', prepend=True)
             # For these widget types, add the size class here
             classes = add_css_class(classes, self.get_size_class())
